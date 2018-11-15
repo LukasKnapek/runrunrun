@@ -1,11 +1,11 @@
 var map = null;
 
 $(document).ready(function(){
-	$('#xmlUploadForm').submit(handleXMLUpload);
+	$('#xmlUploadForm').submit(xmlUploadHandler);
 	map = initializeMap('mapid');
 });
 
-var initializeMap = function(divId) {
+function initializeMap(divId) {
 	var myMap = L.map(divId).setView([ 55.8577701, -4.2324588], 13);
 	L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
 		attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -17,51 +17,96 @@ var initializeMap = function(divId) {
 	return myMap;
 }
 
-var handleXMLUpload = function(e) {
-	e.preventDefault();
-	getAndProcessXMLData();
-}
-
-var getAndProcessXMLData = function() {
+/* Load the XML as an object, pass it to parsing functions */
+function getXMLData() {
 	var file = $('#xmlFileInput').prop('files')[0];
 	var reader = new FileReader();
 
+	// Async reader function
 	reader.onload = function() {
 		var text = reader.result;
-		var xml = $.parseXML(text);
+		try {
+			$('#warning').text('');
+			var xml = $.parseXML(text);
+		} catch(e) {
+			$('#warning').text('The provided file is not a valid GPX file');
+		}
 		$xml = $(xml);
 		
-		parseData($xml);
+		dataLoadHandler($xml);
 	};
+	
 	reader.readAsText(file);
 }
 
-var parseData = function(xmlData) {
-	var trailData = {};
-	
-	trailData.name = xmlData.find('trk').find('name').text();
-	trailData.points = [];
-	
-	xmlData.find('trkpt').each(function(index) {
-		var point = $(this);
-		trailData.points.push({
-			'lat': point.attr('lat'),
-			'long': point.attr('lon'),
-			'elev': point.find('ele').text()
-		});
-	});
-	
-	mapTrail(trailData);
+
+/** Event handlers **/
+
+/* Once a file is uploaded, prevent default submit action and process it instead */
+function xmlUploadHandler(e) {
+	e.preventDefault();
+	getXMLData();
 }
 
-var mapTrail = function(trailData) {
-	var trailPoints = []
+/* Once XML from the file is loaded, parse the data to a dictionary */
+function dataLoadHandler(xmlData) {
+
+	var parsedData = {
+		"Locations": [], // [lat, long]
+		"Elevations": [],
+		"Times": [],
+		"TrackName": ""
+	};
+
+	parsedData = parseTrackDetails(xmlData);
+	parsedData["TrackName"] = parseName(xmlData);
 	
-	$.each(trailData.points, function(index, point) {
-		trailPoints.push([point.lat, point.long]);
+	visualizeData(parsedData)
+}
+
+
+/** Parsing methods **/
+
+function parseName(xml) {
+	var name = xml.find('trk').find('name').text();
+	if (!name) name = "Unnamed track";
+
+	return name;
+}
+
+function parseTrackDetails(xml, parsedData) {
+	// TODO: Handle multiple track segments
+	
+	trackPoints = {
+		"Locations": [],
+		"Elevations": [],
+		"Times": []
+	}
+	
+	xml.find('trkpt').each(function(index) {
+		var point = $(this);
+		
+		trackPoints["Locations"].push([point.attr('lat'), point.attr('lon')]);
+		trackPoints["Elevations"].push(point.find('ele').text());
+		trackPoints["Times"].push(point.find('time').text());
 	});
 	
-	L.polyline(trailPoints, {color: 'red'}).addTo(map);
-	map.flyTo(trailPoints[0]);
+	return trackPoints;
+}
+
+
+/** Visualisations **/
+
+function visualizeData(data) {
+	mapTrack(data["Locations"]);
+	flyToPoint(data["Locations"][0]);
+}
+
+function mapTrack(pointLocations) {
+	L.polyline(pointLocations, {color: 'red'}).addTo(map);
+}
+
+function flyToPoint(point) {
+	map.flyTo(point);
 }
 
