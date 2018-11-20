@@ -57,11 +57,21 @@ function dataLoadHandler(xmlData) {
 		"Times": [],
 		"TrackName": ""
 	};
+	
+	// Garmin-specific extension data
+	var garminParsedData = {
+		"ATemperatures": [],
+		"WTemperatures": [],
+		"Depths": [],
+		"HeartRates": [],
+		"Cadences": []
+	};
 
 	parsedData = parseTrackDetails(xmlData);
 	parsedData["TrackName"] = parseName(xmlData);
+	garminParsedData = parseGarminExtensions(xmlData);
 	
-	visualizeData(parsedData)
+	visualizeData(parsedData);
 }
 
 
@@ -74,10 +84,9 @@ function parseName(xml) {
 	return name;
 }
 
-function parseTrackDetails(xml, parsedData) {
-	// TODO: Handle multiple track segments
+function parseTrackDetails(xml) {
 	
-	trackPoints = {
+	var trackPoints = {
 		"Locations": [],
 		"Elevations": [],
 		"Times": []
@@ -92,6 +101,32 @@ function parseTrackDetails(xml, parsedData) {
 	});
 	
 	return trackPoints;
+}
+
+function parseGarminExtensions(xml) {
+	var extensions = {
+		"ATemperatures": [],
+		"WTemperatures": [],
+		"Depths": [],
+		"HeartRates": [],
+		"Cadences": []
+	};
+		
+	xml.find("ns3\\:TrackPointExtension").each(function(index) {
+		var point = $(this);
+		extensions["ATemperatures"].push(point.find('ns3\\:atemp').text());
+		extensions["WTemperatures"].push(point.find('ns3\\:wtemp').text());
+		extensions["Depths"].push(point.find('ns3\\:depth').text());
+		extensions["HeartRates"].push(point.find('ns3\\:hr').text());
+		extensions["Cadences"].push(point.find('ns3\\:cad').text());
+	});
+	
+	// Check for non-occuring extensions and mark then as null
+	for (var e in extensions) {
+		if (extensions[e].join('') == '') extensions[e] = null;
+	}
+
+	return extensions;
 }
 
 
