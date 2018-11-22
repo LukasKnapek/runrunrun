@@ -1,4 +1,6 @@
-var map = null;
+var map = null;				// Stores the Leaflet map
+var runs = [];				// Stores information about individual GPX files (runs)
+var dataPollerInterval;
 
 $(document).ready(function(){
 	$('#xmlUploadForm').submit(xmlUploadHandler);
@@ -19,11 +21,10 @@ function initializeMap(divId) {
 
 /* Load the XML as an object, pass it to parsing functions */
 function getXMLData() {
-	var file = $('#xmlFileInput').prop('files')[0];
-	var reader = new FileReader();
-
-	// Async reader function
-	reader.onload = function() {
+	var files = $('#xmlFileInput').prop('files');
+	
+	// Async function for reading and parsing the files
+	var readerFunction = function() {
 		var text = reader.result;
 		try {
 			$('#warning').text('');
@@ -36,22 +37,39 @@ function getXMLData() {
 		dataLoadHandler($xml);
 	};
 	
-	reader.readAsText(file);
+	// Task JS with reading and parsing the files
+	for (var i=0; i<files.length; i++) {
+		var file = files.item(i);
+		var reader = new FileReader();
+		reader.onload = readerFunction;
+		reader.readAsText(file);
+	}
+	
+	// Periodically check whether all the files have been read/parsed
+	dataPollerInterval = setInterval(function() { dataPoller(files.length); }, 500);
 }
 
 
 /** Event handlers **/
 
+/* Check whether all n runs have been parsed and loaded form uploaded files */
+function dataPoller(nRuns) {
+	// Wait until we have the same number of runs as the number of uploaded files
+	if (runs.length == nRuns) {
+		clearInterval(dataPollerInterval);
+		visualizeData(runs);
+	}
+}
+
 /* Once a file is uploaded, prevent default submit action and process it instead */
 function xmlUploadHandler(e) {
-	e.preventDefault();
+	e.preventDefault(this);
 	getXMLData();
 }
 
 /* Once XML from the file is loaded, parse the data to a dictionary */
 function dataLoadHandler(xmlData) {
-
-	var parsedData = {
+	var basicParsedData = {
 		"Locations": [], // [lat, long]
 		"Elevations": [],
 		"Times": [],
@@ -67,11 +85,16 @@ function dataLoadHandler(xmlData) {
 		"Cadences": []
 	};
 
-	parsedData = parseTrackDetails(xmlData);
-	parsedData["TrackName"] = parseName(xmlData);
+	basicParsedData = parseTrackDetails(xmlData);
+	basicParsedData["TrackName"] = parseName(xmlData);
 	garminParsedData = parseGarminExtensions(xmlData);
 	
-	visualizeData(parsedData);
+	// Store the data
+	parsedData = {
+		"BasicData": basicParsedData,
+		"GarminData": garminParsedData
+	}
+	runs.push(parsedData);
 }
 
 
@@ -125,7 +148,6 @@ function parseGarminExtensions(xml) {
 	for (var e in extensions) {
 		if (extensions[e].join('') == '') extensions[e] = null;
 	}
-
 	return extensions;
 }
 
@@ -133,7 +155,11 @@ function parseGarminExtensions(xml) {
 /** Visualisations **/
 
 function visualizeData(data) {
-	mapTrack(data["Locations"]);
+	// See dataLoadHandler for the structure of the data
+	
+	// Map the first run
+	mapTrack(data[0]["BasicData"]["Locations"]);
+	// Fly to the first point location of the first run
 	flyToPoint(data["Locations"][0]);
 }
 
