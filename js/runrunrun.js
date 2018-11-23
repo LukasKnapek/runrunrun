@@ -21,6 +21,7 @@ function initializeMap(divId) {
 
 /* Load the XML as an object, pass it to parsing functions */
 function getXMLData() {
+	runs = [];
 	var files = $('#xmlFileInput').prop('files');
 	
 	// Async function for reading and parsing the files
@@ -153,7 +154,6 @@ function parseGarminExtensions(xml) {
 
 /** Calculation functions **/
 function calculateData(data){
-	
 }
 
 
