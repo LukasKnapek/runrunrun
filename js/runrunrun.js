@@ -151,6 +151,11 @@ function parseGarminExtensions(xml) {
 	return extensions;
 }
 
+/** Calculation functions **/
+function calculateData(data){
+	
+}
+
 
 /** Visualisations **/
 
@@ -160,7 +165,9 @@ function visualizeData(data) {
 	// Map the first run
 	mapTrack(data[0]["BasicData"]["Locations"]);
 	// Fly to the first point location of the first run
-	flyToPoint(data["Locations"][0]);
+	flyToPoint(data[0]["BasicData"]["Locations"][0]);
+
+	calculateData(data);
 }
 
 function mapTrack(pointLocations) {
