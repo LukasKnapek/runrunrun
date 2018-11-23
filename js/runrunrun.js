@@ -154,7 +154,59 @@ function parseGarminExtensions(xml) {
 
 /** Calculation functions **/
 function calculateData(data){
+	calculateTime(data);
 }
+
+function calculateTime(data){
+
+	
+	var length = data[0]["BasicData"]["Times"].length - 1;
+	if(data[0]["BasicData"]["Times"][0] === ""){
+		$('#time').text("No time data");
+	}
+	else if (data[0]["BasicData"]["Times"][length] === "") {
+		
+		console.log("undefined?")
+		$('#time').text("No time data");
+	}
+	else {
+		var date = new Date(data[0]["BasicData"]["Times"][0]);
+		var date2 = new Date(data[0]["BasicData"]["Times"][length]);
+
+		var mins = 0;
+		var hours = 0;
+		var secs = 0;
+
+		if(date2.getMinutes() < date.getMinutes() && date2.getSeconds() < date.getSeconds()){
+			hours = date2.getHours() - date.getHours() - 1;
+			mins = date2.getMinutes() - date.getMinutes() + 60 - 1;
+		
+			seconds = date2.getSeconds() - date.getSeconds() + 60;
+		}
+		else if(date2.getMinutes() < date.getMinutes()){
+			hours = date2.getHours() - date.getHours() - 1;
+			mins = date2.getMinutes() - date.getMinutes() + 60;
+		
+			seconds = date2.getSeconds() - date.getSeconds();
+		}
+		else if(date2.getSeconds() < date.getSeconds()){
+			hours = date2.getHours() - date.getHours();
+			mins = date2.getMinutes() - date.getMinutes() - 1;
+		
+			seconds = date2.getSeconds() - date.getSeconds() + 60;
+		}
+		else {
+	
+			hours = date2.getHours() - date.getHours();
+			mins = date2.getMinutes() - date.getMinutes();
+			seconds = date2.getSeconds() - date.getSeconds();
+		}
+
+		var time = hours.toString() + " hours " + mins.toString() + " minutes " + seconds.toString() + " seconds";
+		$('#time').text(time); 
+	}
+}
+
 
 
 /** Visualisations **/
