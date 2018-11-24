@@ -166,12 +166,37 @@ function calculateTime(data){
 	}
 	else if (data[0]["BasicData"]["Times"][length] === "") {
 		
-		console.log("undefined?")
 		$('#time').text("No time data");
 	}
 	else {
 		var date = new Date(data[0]["BasicData"]["Times"][0]);
 		var date2 = new Date(data[0]["BasicData"]["Times"][length]);
+
+
+		$('#time').text(timeCalculation(date, date2)); 
+	}
+
+	if(data.length > 1){
+		length = data[1]["BasicData"]["Times"].length - 1;
+		if(data[1]["BasicData"]["Times"][0] === ""){
+			$('#time2').text("No time data");
+		}
+		else if (data[1]["BasicData"]["Times"][length] === "") {
+			
+			$('#time2').text("No time data");
+		}
+		else {
+			var date3 = new Date(data[1]["BasicData"]["Times"][0]);
+			var date4 = new Date(data[1]["BasicData"]["Times"][length]);
+
+
+			$('#time2').text(timeCalculation(date3, date4)); 
+		}
+	}
+
+}
+
+function timeCalculation(date, date2){
 
 		var mins = 0;
 		var hours = 0;
@@ -203,8 +228,9 @@ function calculateTime(data){
 		}
 
 		var time = hours.toString() + " hours " + mins.toString() + " minutes " + seconds.toString() + " seconds";
-		$('#time').text(time); 
-	}
+
+		return time;
+
 }
 
 
@@ -215,7 +241,10 @@ function visualizeData(data) {
 	// See dataLoadHandler for the structure of the data
 	
 	// Map the first run
-	mapTrack(data[0]["BasicData"]["Locations"]);
+
+	for(var i = 0; i < mapTrack.length; i++){
+		mapTrack(data[i]["BasicData"]["Locations"]);
+	}
 	// Fly to the first point location of the first run
 	flyToPoint(data[0]["BasicData"]["Locations"][0]);
 
