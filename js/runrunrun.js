@@ -171,6 +171,10 @@ function calculateTime(data){
 	else {
 		var date = new Date(data[0]["BasicData"]["Times"][0]);
 		var date2 = new Date(data[0]["BasicData"]["Times"][length]);
+		console.log(data[0]);
+		console.log(data[0]);
+		console.log(data[1]);
+		console.log(data[1]);
 
 
 		$('#time').text(timeCalculation(date, date2)); 
@@ -242,11 +246,13 @@ function visualizeData(data) {
 	
 	// Map the first run
 
-	for(var i = 0; i < mapTrack.length; i++){
+	for(var i = 0; i < data.length; i++){
 		mapTrack(data[i]["BasicData"]["Locations"]);
 	}
 	// Fly to the first point location of the first run
 	flyToPoint(data[0]["BasicData"]["Locations"][0]);
+	//THERES AN ERROR WITH THIS LINE WHEN TRYING TO FLY TO THE POINT?? but only with multiple
+	//BECAUSE THE FIRST ONE IS COMPLETELY BLANK?? WHYY??
 
 	calculateData(data);
 }
