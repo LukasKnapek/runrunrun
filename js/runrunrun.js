@@ -26,7 +26,8 @@ function getXMLData() {
 	
 	// Async function for reading and parsing the files
 	var readerFunction = function() {
-		var text = reader.result;
+		var text = this.result;
+
 		try {
 			$('#warning').text('');
 			var xml = $.parseXML(text);
@@ -43,6 +44,9 @@ function getXMLData() {
 		var file = files.item(i);
 		var reader = new FileReader();
 		reader.onload = readerFunction;
+		reader.onerror = function () {
+			console.log("error!");
+		}
 		reader.readAsText(file);
 	}
 	
@@ -89,6 +93,7 @@ function dataLoadHandler(xmlData) {
 	basicParsedData = parseTrackDetails(xmlData);
 	basicParsedData["TrackName"] = parseName(xmlData);
 	garminParsedData = parseGarminExtensions(xmlData);
+
 	
 	// Store the data
 	parsedData = {
@@ -109,7 +114,6 @@ function parseName(xml) {
 }
 
 function parseTrackDetails(xml) {
-	
 	var trackPoints = {
 		"Locations": [],
 		"Elevations": [],
@@ -243,10 +247,10 @@ function visualizeData(data) {
 	// See dataLoadHandler for the structure of the data
 	
 	// Map the first run
-
 	for(var i = 0; i < data.length; i++){
 		mapTrack(data[i]["BasicData"]["Locations"]);
 	}
+
 	// Fly to the first point location of the first run
 	//flyToPoint(data[0]["BasicData"]["Locations"][0]);
 	//THERES AN ERROR WITH THIS LINE WHEN TRYING TO FLY TO THE POINT?? but only with multiple
