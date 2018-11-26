@@ -159,6 +159,7 @@ function parseGarminExtensions(xml) {
 /** Calculation functions **/
 function calculateData(data){
 	calculateTime(data);
+	calculateElevation(data);
 }
 
 function calculateTime(data){
@@ -175,8 +176,6 @@ function calculateTime(data){
 	else {
 		var date = new Date(data[0]["BasicData"]["Times"][0]);
 		var date2 = new Date(data[0]["BasicData"]["Times"][length]);
-		console.log(data[0]);
-		console.log(data[1]);
 
 
 		$('#time').text(timeCalculation(date, date2)); 
@@ -236,6 +235,29 @@ function timeCalculation(date, date2){
 		var time = hours.toString() + " hours " + mins.toString() + " minutes " + seconds.toString() + " seconds";
 
 		return time;
+
+}
+
+function calculateDistance(data){
+
+}
+
+function calculateElevation(data){
+	
+	var elevations = data[0]["BasicData"]["Elevations"];
+	var total = 0;
+	for(var i = 0; i < elevations.length; i++){
+		total = total + parseInt(elevations[i]);
+	}
+	$('#elevation').text(Math.round(total / elevations.length)); 
+	if(data.length > 1){
+		elevations = data[1]["BasicData"]["Elevations"];
+		total = 0;
+		for(var i = 0; i < elevations.length; i++){
+			total = total + parseInt(elevations[i]);
+		}
+		$('#elevation2').text(Math.round(total / elevations.length));
+	}
 
 }
 
