@@ -21,11 +21,13 @@ function initializeMap(divId) {
 
 /* Load the XML as an object, pass it to parsing functions */
 function getXMLData() {
+	runs = [];
 	var files = $('#xmlFileInput').prop('files');
 	
 	// Async function for reading and parsing the files
 	var readerFunction = function() {
-		var text = reader.result;
+		var text = this.result;
+
 		try {
 			$('#warning').text('');
 			var xml = $.parseXML(text);
@@ -42,6 +44,9 @@ function getXMLData() {
 		var file = files.item(i);
 		var reader = new FileReader();
 		reader.onload = readerFunction;
+		reader.onerror = function () {
+			console.log("error!");
+		}
 		reader.readAsText(file);
 	}
 	
@@ -88,6 +93,7 @@ function dataLoadHandler(xmlData) {
 	basicParsedData = parseTrackDetails(xmlData);
 	basicParsedData["TrackName"] = parseName(xmlData);
 	garminParsedData = parseGarminExtensions(xmlData);
+
 	
 	// Store the data
 	parsedData = {
@@ -108,7 +114,6 @@ function parseName(xml) {
 }
 
 function parseTrackDetails(xml) {
-	
 	var trackPoints = {
 		"Locations": [],
 		"Elevations": [],
@@ -153,8 +158,87 @@ function parseGarminExtensions(xml) {
 
 /** Calculation functions **/
 function calculateData(data){
-	
+	calculateTime(data);
 }
+
+function calculateTime(data){
+
+	
+	var length = data[0]["BasicData"]["Times"].length - 1;
+	if(data[0]["BasicData"]["Times"][0] === ""){
+		$('#time').text("No time data");
+	}
+	else if (data[0]["BasicData"]["Times"][length] === "") {
+		
+		$('#time').text("No time data");
+	}
+	else {
+		var date = new Date(data[0]["BasicData"]["Times"][0]);
+		var date2 = new Date(data[0]["BasicData"]["Times"][length]);
+		console.log(data[0]);
+		console.log(data[1]);
+
+
+		$('#time').text(timeCalculation(date, date2)); 
+	}
+
+	if(data.length > 1){
+		length = data[1]["BasicData"]["Times"].length - 1;
+		if(data[1]["BasicData"]["Times"][0] === ""){
+			$('#time2').text("No time data");
+		}
+		else if (data[1]["BasicData"]["Times"][length] === "") {
+			
+			$('#time2').text("No time data");
+		}
+		else {
+			var date3 = new Date(data[1]["BasicData"]["Times"][0]);
+			var date4 = new Date(data[1]["BasicData"]["Times"][length]);
+
+
+			$('#time2').text(timeCalculation(date3, date4)); 
+		}
+	}
+
+}
+
+function timeCalculation(date, date2){
+
+		var mins = 0;
+		var hours = 0;
+		var secs = 0;
+
+		if(date2.getMinutes() < date.getMinutes() && date2.getSeconds() < date.getSeconds()){
+			hours = date2.getHours() - date.getHours() - 1;
+			mins = date2.getMinutes() - date.getMinutes() + 60 - 1;
+		
+			seconds = date2.getSeconds() - date.getSeconds() + 60;
+		}
+		else if(date2.getMinutes() < date.getMinutes()){
+			hours = date2.getHours() - date.getHours() - 1;
+			mins = date2.getMinutes() - date.getMinutes() + 60;
+		
+			seconds = date2.getSeconds() - date.getSeconds();
+		}
+		else if(date2.getSeconds() < date.getSeconds()){
+			hours = date2.getHours() - date.getHours();
+			mins = date2.getMinutes() - date.getMinutes() - 1;
+		
+			seconds = date2.getSeconds() - date.getSeconds() + 60;
+		}
+		else {
+	
+			hours = date2.getHours() - date.getHours();
+			mins = date2.getMinutes() - date.getMinutes();
+			seconds = date2.getSeconds() - date.getSeconds();
+		}
+
+		var time = hours.toString() + " hours " + mins.toString() + " minutes " + seconds.toString() + " seconds";
+
+		return time;
+
+}
+
 
 
 /** Visualisations **/
@@ -163,9 +247,14 @@ function visualizeData(data) {
 	// See dataLoadHandler for the structure of the data
 	
 	// Map the first run
-	mapTrack(data[0]["BasicData"]["Locations"]);
+	for(var i = 0; i < data.length; i++){
+		mapTrack(data[i]["BasicData"]["Locations"]);
+	}
+
 	// Fly to the first point location of the first run
-	flyToPoint(data[0]["BasicData"]["Locations"][0]);
+	//flyToPoint(data[0]["BasicData"]["Locations"][0]);
+	//THERES AN ERROR WITH THIS LINE WHEN TRYING TO FLY TO THE POINT?? but only with multiple
+	//BECAUSE THE FIRST ONE IS COMPLETELY BLANK?? WHYY??
 
 	calculateData(data);
 }
