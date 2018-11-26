@@ -158,8 +158,11 @@ function parseGarminExtensions(xml) {
 
 /** Calculation functions **/
 function calculateData(data){
-	calculateTime(data);
+	var distance = calculateDistance(data);
+	var time = calculateTime(data);
+	calculateSpeed(data, distance, time);
 	calculateElevation(data);
+	calculateHeart(data);
 }
 
 function calculateTime(data){
@@ -177,69 +180,112 @@ function calculateTime(data){
 		var date = new Date(data[0]["BasicData"]["Times"][0]);
 		var date2 = new Date(data[0]["BasicData"]["Times"][length]);
 
-
-		$('#time').text(timeCalculation(date, date2)); 
+		var timefirst = timeCalculation(date, date2);
+		$('#time').text(timefirst[0]); 
 	}
-
+	var time2;
 	if(data.length > 1){
-		length = data[1]["BasicData"]["Times"].length - 1;
-		if(data[1]["BasicData"]["Times"][0] === ""){
+		length = data[data.length-1]["BasicData"]["Times"].length - 1;
+		if(data[data.length-1]["BasicData"]["Times"][0] === ""){
 			$('#time2').text("No time data");
 		}
-		else if (data[1]["BasicData"]["Times"][length] === "") {
+		else if (data[data.length-1]["BasicData"]["Times"][length] === "") {
 			
 			$('#time2').text("No time data");
 		}
 		else {
-			var date3 = new Date(data[1]["BasicData"]["Times"][0]);
-			var date4 = new Date(data[1]["BasicData"]["Times"][length]);
+			var date3 = new Date(data[data.length-1]["BasicData"]["Times"][0]);
+			var date4 = new Date(data[data.length-1]["BasicData"]["Times"][length]);
 
+			var timelast = timeCalculation(date3, date4);
+			$('#time2').text(timelast[0]); 
 
-			$('#time2').text(timeCalculation(date3, date4)); 
 		}
+		time2 = timelast[1];
 	}
+
+	return [timefirst[1], time2];
 
 }
 
 function timeCalculation(date, date2){
 
-		var mins = 0;
-		var hours = 0;
-		var secs = 0;
+	var mins = 0;
+	var hours = 0;
+	var secs = 0;
 
-		if(date2.getMinutes() < date.getMinutes() && date2.getSeconds() < date.getSeconds()){
-			hours = date2.getHours() - date.getHours() - 1;
-			mins = date2.getMinutes() - date.getMinutes() + 60 - 1;
-		
-			seconds = date2.getSeconds() - date.getSeconds() + 60;
-		}
-		else if(date2.getMinutes() < date.getMinutes()){
-			hours = date2.getHours() - date.getHours() - 1;
-			mins = date2.getMinutes() - date.getMinutes() + 60;
-		
-			seconds = date2.getSeconds() - date.getSeconds();
-		}
-		else if(date2.getSeconds() < date.getSeconds()){
-			hours = date2.getHours() - date.getHours();
-			mins = date2.getMinutes() - date.getMinutes() - 1;
-		
-			seconds = date2.getSeconds() - date.getSeconds() + 60;
-		}
-		else {
+	if(date2.getMinutes() < date.getMinutes() && date2.getSeconds() < date.getSeconds()){
+		hours = date2.getHours() - date.getHours() - 1;
+		mins = date2.getMinutes() - date.getMinutes() + 60 - 1;
 	
-			hours = date2.getHours() - date.getHours();
-			mins = date2.getMinutes() - date.getMinutes();
-			seconds = date2.getSeconds() - date.getSeconds();
-		}
+		seconds = date2.getSeconds() - date.getSeconds() + 60;
+	}
+	else if(date2.getMinutes() < date.getMinutes()){
+		hours = date2.getHours() - date.getHours() - 1;
+		mins = date2.getMinutes() - date.getMinutes() + 60;
+	
+		seconds = date2.getSeconds() - date.getSeconds();
+	}
+	else if(date2.getSeconds() < date.getSeconds()){
+		hours = date2.getHours() - date.getHours();
+		mins = date2.getMinutes() - date.getMinutes() - 1;
+	
+		seconds = date2.getSeconds() - date.getSeconds() + 60;
+	}
+	else {
 
-		var time = hours.toString() + " hours " + mins.toString() + " minutes " + seconds.toString() + " seconds";
+		hours = date2.getHours() - date.getHours();
+		mins = date2.getMinutes() - date.getMinutes();
+		seconds = date2.getSeconds() - date.getSeconds();
+	}
 
-		return time;
+	var time = hours.toString() + " hours " + mins.toString() + " minutes " + seconds.toString() + " seconds";
+
+
+	var totaltime = (hours * 60 * 60) + (mins * 60) + seconds;
+
+	return [time, totaltime];
 
 }
 
 function calculateDistance(data){
 
+	var distances = data[0]["BasicData"]["Locations"];
+
+	var latlng1 = L.latLng(distances[0][0],distances[0][1]);
+	var latlng2 = L.latLng(distances[distances.length-1][0],distances[distances.length-1][1])
+
+	var distance = latlng1.distanceTo(latlng2);
+	
+	$('#distance').text(Math.round(distance) + "m");
+
+	if(data.length > 1){
+		distances = data[data.length-1]["BasicData"]["Locations"];
+
+		latlng1 = L.latLng(distances[0][0],distances[0][1]);
+		latlng2 = L.latLng(distances[distances.length-1][0],distances[distances.length-1][1])
+
+		var distancelast = latlng1.distanceTo(latlng2);
+	
+		$('#distance2').text(Math.round(distance) + "m");
+	
+	}
+	return [distance, distancelast];
+
+	//latlng.distanceTo(lat,long)
+
+}
+
+function calculateSpeed(data, distance, time){
+	console.log(distance);
+	var firstspeed = distance[0] / time[0];
+	$('#speed').text(firstspeed.toFixed(2) + "m/s");
+	
+	if(data.length > 1){
+
+		var lastspeed = distance[1] / time[1];
+		$('#speed2').text(lastspeed.toFixed(2) + "m/s");
+	}
 }
 
 function calculateElevation(data){
@@ -251,7 +297,7 @@ function calculateElevation(data){
 	}
 	$('#elevation').text(Math.round(total / elevations.length)); 
 	if(data.length > 1){
-		elevations = data[1]["BasicData"]["Elevations"];
+		elevations = data[data.length-1]["BasicData"]["Elevations"];
 		total = 0;
 		for(var i = 0; i < elevations.length; i++){
 			total = total + parseInt(elevations[i]);
@@ -260,6 +306,26 @@ function calculateElevation(data){
 	}
 
 }
+
+function calculateHeart(data){
+	
+	var heartrates = data[0]["GarminData"]["HeartRates"];
+	var total = 0;
+	for(var i = 0; i < heartrates.length; i++){
+		total = total + parseInt(heartrates[i]);
+	}
+	$('#heartrate').text(Math.round(total / heartrates.length)); 
+	if(data.length > 1){
+		heartrates = data[data.length-1]["GarminData"]["HeartRates"];
+		total = 0;
+		for(var i = 0; i < heartrates.length; i++){
+			total = total + parseInt(heartrates[i]);
+		}
+		$('#heartrate2').text(Math.round(total / heartrates.length));
+	}
+
+}
+
 
 
 
@@ -274,9 +340,7 @@ function visualizeData(data) {
 	}
 
 	// Fly to the first point location of the first run
-	//flyToPoint(data[0]["BasicData"]["Locations"][0]);
-	//THERES AN ERROR WITH THIS LINE WHEN TRYING TO FLY TO THE POINT?? but only with multiple
-	//BECAUSE THE FIRST ONE IS COMPLETELY BLANK?? WHYY??
+	flyToPoint(data[0]["BasicData"]["Locations"][0]);
 
 	calculateData(data);
 }
