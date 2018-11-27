@@ -163,6 +163,31 @@ function calculateData(data){
 	calculateSpeed(data, distance, time);
 	calculateElevation(data);
 	calculateHeart(data);
+	mapGraph(data);
+}
+
+function mapGraph(data){
+
+    window.onload = function () {
+     
+    var chart = new CanvasJS.Chart("chartContainer", {
+    	animationEnabled: true,
+    	theme: "light2",
+    	title:{
+    		text: "Simple Line Chart"
+    	},
+    	axisY:{
+    		includeZero: false
+    	},
+    	data: [{        
+    		type: "line",       
+    		dataPoints: data[0]["BasicData"]["Elevations"];
+    	}]
+    });
+    chart.render();
+     
+    }                                
+
 }
 
 function calculateTime(data){
