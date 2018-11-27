@@ -164,31 +164,105 @@ function calculateData(data){
 	calculateElevation(data);
 	calculateHeart(data);
 	mapGraph(data);
+	if (data.length > 1){
+		mapGraph2(data);
+	}
 }
 
-function mapGraph(data){
 
-    window.onload = function () {
-     
-    var chart = new CanvasJS.Chart("chartContainer", {
-    	animationEnabled: true,
-    	theme: "light2",
-    	title:{
-    		text: "Simple Line Chart"
-    	},
-    	axisY:{
-    		includeZero: false
-    	},
-    	data: [{        
-    		type: "line",       
-    		dataPoints: data[0]["BasicData"]["Elevations"];
-    	}]
-    });
-    chart.render();
-     
-    }                                
 
-}
+function mapGraph(data) {
+
+	var elevations = [];
+	for(var i=0; i<data[0]["BasicData"]["Elevations"].length; i++){
+		var point = {y:parseInt(data[0]["BasicData"]["Elevations"][i])};
+		elevations.push(point);
+	}
+
+	var heartrate = [];
+	for(var i=0; i<data[0]["GarminData"]["HeartRates"].length; i++){
+		var point = {y:parseInt(data[0]["GarminData"]["HeartRates"][i])};
+		heartrate.push(point);
+	}
+     
+	var chart = new CanvasJS.Chart("chartContainer", {
+		animationEnabled: true,
+		theme: "light2",
+		title:{
+			text: "Statistics"
+		},
+		axisY:{
+			includeZero: false
+		},
+		legend: {
+			cursor: "pointer",
+			verticalAlign: "top",
+			horizontalAlign: "center",
+			dockInsidePlotArea: true,
+		},
+		data: [{        
+			type: "line",     
+			name: "Elevation",
+			showInLegend: true,  
+			dataPoints: elevations
+		},
+		{        
+			type: "line",     
+			name: "HeartRate",
+			showInLegend: true,  
+			dataPoints: heartrate
+		}]
+		});
+		chart.render();
+
+	}        
+
+function mapGraph2(data) {
+
+	var elevations = [];
+	for(var i=0; i<data[data.length-1]["BasicData"]["Elevations"].length; i++){
+		var point = {y:parseInt(data[data.length-1]["BasicData"]["Elevations"][i])};
+		elevations.push(point);
+	}
+
+	var heartrate = [];
+	for(var i=0; i<data[data.length-1]["GarminData"]["HeartRates"].length; i++){
+		var point = {y:parseInt(data[data.length-1]["GarminData"]["HeartRates"][i])};
+		heartrate.push(point);
+	}
+     
+	var chart = new CanvasJS.Chart("chartContainer2", {
+		animationEnabled: true,
+		theme: "light2",
+		title:{
+			text: "Statistics"
+		},
+		axisY:{
+			includeZero: false
+		},
+		legend: {
+			cursor: "pointer",
+			verticalAlign: "top",
+			horizontalAlign: "center",
+			dockInsidePlotArea: true,
+		},
+		data: [{        
+			type: "line",     
+			name: "Elevation",
+			showInLegend: true,  
+			dataPoints: elevations
+		},
+		{        
+			type: "line",     
+			name: "HeartRate",
+			showInLegend: true,  
+			dataPoints: heartrate
+		}]
+		});
+		chart.render();
+
+	}        
+
 
 function calculateTime(data){
 
@@ -302,7 +376,6 @@ function calculateDistance(data){
 }
 
 function calculateSpeed(data, distance, time){
-	console.log(distance);
 	var firstspeed = distance[0] / time[0];
 	$('#speed').text(firstspeed.toFixed(2) + "m/s");
 	
