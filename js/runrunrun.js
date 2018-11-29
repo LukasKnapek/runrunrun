@@ -1,4 +1,4 @@
-var map = null;				// Stores the Leaflet map
+﻿var map = null;				// Stores the Leaflet map
 var runs = [];				// Stores information about individual GPX files (runs)
 var dataPollerInterval;
 
@@ -160,12 +160,13 @@ function parseGarminExtensions(xml) {
 function calculateData(data){
 	var distance = calculateDistance(data);
 	var time = calculateTime(data);
-	calculateSpeed(data, distance, time);
+	var speed = calculateSpeed(data, distance, time);
 	calculateElevation(data);
 	calculateHeart(data);
 	mapGraph(data);
 	if (data.length > 1){
 		mapGraph2(data);
+		findWinner(speed);
 	}
 }
 
@@ -239,6 +240,9 @@ function mapGraph2(data) {
 		},
 		axisY:{
 			includeZero: false
+		},
+		axisX:{
+			title: "Data Point"
 		},
 		legend: {
 			cursor: "pointer",
@@ -383,6 +387,22 @@ function calculateSpeed(data, distance, time){
 
 		var lastspeed = distance[1] / time[1];
 		$('#speed2').text(lastspeed.toFixed(2) + "m/s");
+		return [firstspeed, lastspeed];
+	}
+	return firstspeed;
+
+	
+}
+
+function findWinner(speed){
+	if(speed[0] > speed[1]){
+		$('#winner').text("Left Runner!");
+	}
+	else if (speed[1] > speed[0]) {
+		$('#winner').text("Right Runner!");
+	}
+	else {
+		$('#winner').text("Neither, It's a Draw!");
 	}
 }
 
