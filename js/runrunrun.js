@@ -370,12 +370,10 @@ function calculateDistance(data){
 
 		var distancelast = latlng1.distanceTo(latlng2);
 	
-		$('#distance2').text(Math.round(distance) + "m");
+		$('#distance2').text(Math.round(distancelast ) + "m");
 	
 	}
 	return [distance, distancelast];
-
-	//latlng.distanceTo(lat,long)
 
 }
 
